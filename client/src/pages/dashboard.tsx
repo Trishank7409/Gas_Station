@@ -1,108 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import { HiArchiveBoxXMark } from "react-icons/hi2";
+import UserServices from '../services/auth.services';
+import { UserContext } from '../context/userContext';
 
-interface Store {
-  _id?: string;
-  name: string;
-  openTime: string;
-  closeTime: string;
-  employees: number;
-  slots: number;
-}
-
-const AdminDashboard: React.FC = () => {
-  const [storeName, setStoreName] = useState<string>('');
-  const [openTime, setOpenTime] = useState<string>('');
-  const [closeTime, setCloseTime] = useState<string>('');
-  const [numEmployees, setNumEmployees] = useState<string>('');
-  const [store, setStore] = useState<Store[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<string>('');
-
-//   useEffect(() => {
-//     async function fetchStores() {
-//       const accessToken = localStorage.getItem('accessToken');
-//       const userId = localStorage.getItem('userId');
-//       if (!accessToken) {
-//         console.error('Access token not found in localStorage');
-//         return;
-//       }
-//       try {
-//         const response = await fetch(`http://localhost:4000/api/v1/store/getStores/${userId}`, {
-//           method: 'GET',
-//           headers: {
-//             'Content-Type': 'application/json',
-//             Authorization: `Bearer ${accessToken}`,
-//           },
-//         });
-//         if (!response.ok) {
-//           throw new Error('Failed to fetch stores');
-//         }
-//         const data = await response.json();
-//         setStore(data.data);
-//       } catch (error) {
-//         console.error('Error fetching stores:', error);
-//       }
-//     }
-//     fetchStores();
-//   }, [setStore]);
-
-  const submitHandler = async () => {
+const AdminDashboard = () => {
+  const userContext=React.useContext(UserContext)
+  if(!userContext){
+    throw new Error('UserContext must be used with in provider')
+  }
+  const {state}=userContext
+  const userID=state.userInfo.data.userId
+  const token= state.userInfo.data.token
     const [formData, setFormData] = useState({
         name: '',
         address: '',
         city:'',
-        Gas_Price:'',
-        lat:'',
-        lng:'',
-        status:''
+        state:'',
+        Gas_Price:0,
+        lat:0,
+        lng:0,
+        // status:true
       });
-    setStore([...store, newStore]);
-    setStoreName('');
-    setOpenTime('');
-    setCloseTime('');
-    setNumEmployees('');
-    setAvailableSlots('');
-
-    try {
-      const userId = localStorage.getItem("userId");
-      const response = await fetch(`http://localhost:4000/api/v1/store/createStore/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(newStore)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-      } else {
-        console.error('Failed to create store');
+      function changeHandler(event: React.FormEvent<HTMLInputElement>) {
+        const target = event.target as HTMLInputElement;
+        setFormData((prevData) => ({
+          ...prevData,
+          [target.name]: target.value,
+        }));
       }
-    } catch (error) {
-      console.error('Error occurred while creating store:', error);
-    }
-  };
 
-  const deleteHandler = async (storeId: string) => {
-    try {
-      const response = await fetch(`http://localhost:4000/api/v1/store/deleteStoreById/${storeId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete store');
+      async function submitHandler(){
+        const data= {...formData}
+        console.log("data",data)
+        try {
+            const response = await UserServices.createStation(data,userID,token)
+            console.log(response); // Handle the response as needed
       }
-      const data = await response.json();
-      setStore(data.data);
-    } catch (error) {
-      console.error('Error occurred while deleting store:', error);
+       catch (error) {
+        console.error(error);
+      }
     }
-  };
-
   return (
     <>
       <section className="rounded-md bg-black/70 p-2">
@@ -123,10 +60,10 @@ const AdminDashboard: React.FC = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-bold leading-tight text-black">
-              Create Your Own Desire Store
+              Create Your Own Desire Gas Station
             </h2>
             <p className="mt-2text-sm text-gray-600 ">
-              Don&#x27;t have an Store?{" "}
+              Don&#x27;t have an Station?{" "}
               <a
                 href="#"
                 title=""
@@ -135,7 +72,7 @@ const AdminDashboard: React.FC = () => {
                 Create a free Gas Stations
               </a>
             </p>
-            <form action="#" method="POST" className="mt-8">
+            <form onSubmit={submitHandler} className="mt-8">
               <div className="space-y-5">
                 <div>
                   <label htmlFor="storeName" className="text-base font-medium text-gray-900">
@@ -145,84 +82,110 @@ const AdminDashboard: React.FC = () => {
                     <input
                       id="name"
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Store Name"
-                      value={storeName}
-                      onChange={(e) => setStoreName(e.target.value)}
+                      placeholder="Station Name"
+                      value={formData.name}
+                      onChange={changeHandler}
+                      required
+                      type="string"
+                      name="name"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="openTime" className="text-base font-medium text-gray-900">
-                    Open Time
+                    Street
                   </label>
                   <div className="mt-2">
                     <input
-                      id="openTime"
-                      type="time"
+                      id="address"
+                      type="string"
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Open Time"
-                      value={openTime}
-                      onChange={(e) => setOpenTime(e.target.value)}
+                      placeholder="Street"
+                      value={formData.address}
+                      onChange={changeHandler}
+                      required
+                      name="address"
+
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="closeTime" className="text-base font-medium text-gray-900">
-                    Close Time
+                    City
                   </label>
                   <div className="mt-2">
                     <input
-                      id="closeTime"
-                      type="time"
+                      id="city"
+                      type="string"
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Close Time"
-                      value={closeTime}
-                      onChange={(e) => setCloseTime(e.target.value)}
+                      placeholder="City Name"
+                      value={formData.city}
+                      onChange={changeHandler}
+                      name='city'
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="closeTime" className="text-base font-medium text-gray-900">
+                    State
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="state"
+                      type="string"
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="State Name"
+                      value={formData.state}
+                      onChange={changeHandler}
+                      name='state'
+                      required
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="numEmployees" className="text-base font-medium text-gray-900">
-                    Number of Employees
+                   Define Lattitude
                   </label>
                   <div className="mt-2">
                     <input
-                      id="numEmployees"
+                      id="lat"
                       type="number"
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Number of Employees"
-                      value={numEmployees}
-                      onChange={(e) => setNumEmployees(e.target.value)}
+                      placeholder="Lattitude"
+                      value={formData.lat}
+                      onChange={changeHandler}
+                      name='lat'
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="availableSlots" className="text-base font-medium text-gray-900">
-                    Available Slots
+                    Longitude
                   </label>
                   <div className="mt-2">
                     <input
-                      id="availableSlots"
+                      id="lng"
                       type="number"
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="Available Slots"
-                      value={availableSlots}
-                      onChange={(e) => setAvailableSlots(e.target.value)}
+                      value={formData.lng}
+                      onChange={changeHandler}
+                      name='lng'
                     />
                   </div>
                 </div>
+
                 <div>
                   <button
-                    type="button"
                     className="inline-flex w-full items-center justify-center rounded-md border border-transparent bg-black px-3.5 py-2.5 text-sm font-semibold leading-4 text-white shadow-sm transition-all duration-200 hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                    onClick={submitHandler}
                   >
-                    Create Store
+                    Create Station
                   </button>
                 </div>
               </div>
             </form>
-            <div>
+            {/* <div>
               <ul role="list" className="divide-y divide-gray-100">
                 {store.map((store) => (
                   <li
@@ -262,7 +225,7 @@ const AdminDashboard: React.FC = () => {
                   </li>
                 ))}
               </ul>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>

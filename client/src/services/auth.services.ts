@@ -1,3 +1,4 @@
+
 interface LoginCredentials {
   email: FormDataEntryValue | null;
   password: FormDataEntryValue | null;
@@ -9,6 +10,16 @@ interface RegisterCredentials{
   confirmPassword: FormDataEntryValue | null;
   fullName: FormDataEntryValue | null;
   role: FormDataEntryValue|null
+}
+
+interface Station{
+  name: String,
+  lat: Number,
+  lng: Number,
+  address: String,
+  city: String,
+  state: String,
+  Gas_Price: Number,
 }
 
 interface LoginResponse {
@@ -75,6 +86,30 @@ const UserServices = {
     return data;
     // return data;
     // console.log(data);
+  },
+
+  // createthe station
+  createStation: async (station: Station,userId:string,token:string): Promise<Station> => {
+  
+    // const userId=state.userInfo
+    // const accessToken = localStorage.getItem('accessToken');
+    // const userId =localStorage.getItem('userId')
+    console.log("userid",userId)
+
+    const response = await fetch('http://localhost:8000/api/station/create-station${userId}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(station),
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error('Station creation failed');
+    }
+    const data: Station = await response.json();
+    return data;
   },
 };
 

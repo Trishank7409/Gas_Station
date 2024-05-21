@@ -16,7 +16,6 @@ const Login = () => {
       throw new Error('UserContext must be used with in provider')
     }
     const {dispatch}=userContext
-    const {state}=userContext
     function changeHandler(event: React.FormEvent<HTMLInputElement>) {
       const target = event.target as HTMLInputElement;
       setFormData((prevData) => ({
@@ -37,7 +36,7 @@ const Login = () => {
                     expires: 7,
                 })
             };
-            console.log("acesstoken", JSON.stringify(response))
+            console.log("acesstoken", response)
             if (response.success) {
                 localStorage.setItem('token', response.data.token)
                 localStorage.setItem('user', JSON.stringify(response.data.user))
